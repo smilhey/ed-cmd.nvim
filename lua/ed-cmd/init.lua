@@ -1,11 +1,12 @@
 local M = { enabled = false }
+
 M.opts = {
 	cmdline = { keymaps = { edit = "<ESC>", execute = "<CR>" } },
 	pumenu = { max_items = 100 },
 }
 
-local cmdline = require("cmdline")
-local pumenu = require("pumenu")
+local cmdline = require("ed-cmd.cmdline")
+local pumenu = require("ed-cmd.pumenu")
 
 function M.setup(opts)
 	opts = vim.tbl_deep_extend("force", M.opts, opts)
