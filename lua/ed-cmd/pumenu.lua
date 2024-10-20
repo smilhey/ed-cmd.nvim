@@ -30,6 +30,8 @@ function M.update_window()
 		col = col - 1
 	end
 	local width = M.width
+	M.pum_row = row
+	M.pum_col = col
 	vim.api.nvim_win_set_config(M.win, { relative = "editor", width = width, height = height, row = row, col = col })
 end
 
@@ -179,6 +181,21 @@ function M.setup(opts)
 	M.max_items = opts.max_items
 	M.ns = vim.api.nvim_create_namespace("ed-pumenu")
 	vim.api.nvim_set_hl(M.ns, "Normal", { link = "Pmenu" })
+	M.old_pum_getpos = vim.fn.pum_getpos
+	vim.fn.pum_getpos = function()
+		if M.win == -1 or not vim.api.nvim_win_is_valid(M.win) then
+			return {}
+		else
+			return {
+				height = M.height,
+				width = M.width,
+				row = M.pum_row,
+				col = M.pum_col,
+				size = #M.items,
+				scrollbar = #M.items > M.height,
+			}
+		end
+	end
 end
 
 return M
