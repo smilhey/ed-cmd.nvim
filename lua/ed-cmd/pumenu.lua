@@ -4,7 +4,6 @@ local M = {
 	max_items = 20,
 }
 
-
 function M.init_buffer()
 	if vim.api.nvim_buf_is_valid(M.buf) then
 		return
@@ -179,7 +178,6 @@ end
 function M.setup(opts)
 	M.max_items = opts.max_items
 	M.ns = vim.api.nvim_create_namespace("ed-pumenu")
-	vim.api.nvim_set_hl(0, "PmenuKindSel", { link = "IncSearch" })
 	vim.api.nvim_set_hl(M.ns, "Normal", { link = "Pmenu" })
 end
 
