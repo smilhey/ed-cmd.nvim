@@ -1,6 +1,6 @@
 # Cmdline Editor Plugin for Neovim
 
-https://github.com/user-attachments/assets/668b1add-c25d-4c63-a07e-1fa747a7556c
+https://github.com/user-attachments/assets/f3633128-1e53-4585-bf63-d94e3bce8bf6
 
 This plugin allows you to edit the cmdline like you would a normal buffer, in a
 similar way as the cmdwindow (Ctrl-F in cmd mode). However unlike the cmdwindow
