@@ -17,6 +17,8 @@ difference in behaviour (cases that I might not have encountered and replicated)
 - **Command Line History Navigation**: Navigate through previously entered
   commands with ease like in the cmdwindow (hitting j and k).
 
+To cancel a command, any keymap that usually worked shoud do (apart from the one you assign to edit - see below).
+
 ## Installation
 
 ### Using lazy.nvim
