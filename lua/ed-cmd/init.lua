@@ -1,7 +1,7 @@
 local M = { enabled = false }
 
 M.opts = {
-	cmdline = { keymaps = { edit = "<ESC>", execute = "<CR>" } },
+	cmdline = { keymaps = { edit = "<ESC>", execute = "<CR>", close = "<C-C>" } },
 	pumenu = { max_items = 100 },
 }
 

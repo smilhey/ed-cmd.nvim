@@ -34,6 +34,12 @@ function M.init_buf()
 	vim.bo[M.buf].buftype = "nofile"
 	vim.api.nvim_buf_set_name(M.buf, "cmdline")
 	M.exit_autocmd = vim.api.nvim_create_autocmd({ "BufLeave", "BufHidden" }, { buffer = M.buf, callback = M.exit })
+	vim.keymap.set("n", M.keymaps.close, M.exit, { buffer = M.buf, silent = true, noremap = true })
+	vim.keymap.set("n", M.keymaps.execute, function()
+		local firstc, cmd = M.firstc, vim.api.nvim_get_current_line()
+		M.exit()
+		M.exe(firstc, cmd)
+	end, { silent = true, buffer = M.buf, noremap = true })
 	vim.api.nvim_create_autocmd({ "InsertEnter" }, {
 		buffer = M.buf,
 		callback = function()
@@ -202,12 +208,9 @@ end
 
 function M.setup(opts)
 	M.ns = vim.api.nvim_create_namespace("ed-cmdline")
+	M.keymaps.close = opts.keymaps.close
+	M.keymaps.execute = opts.keymaps.execute
 	vim.keymap.set("c", opts.keymaps.edit, M.enter_edit, { desc = "Enter cmdline edit mode" })
-	vim.keymap.set("n", opts.keymaps.execute, function()
-		local firstc, cmd = M.firstc, vim.api.nvim_get_current_line()
-		M.exit()
-		M.exe(firstc, cmd)
-	end, { silent = true, buffer = M.buf, noremap = true })
 end
 
 function M.disable(opts)
