@@ -22,6 +22,7 @@ local M = {
 	prompt = nil,
 	cmdheight = 0,
 	win_opts = win_opts,
+	keymaps = {},
 	history = {},
 }
 
