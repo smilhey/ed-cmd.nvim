@@ -83,7 +83,7 @@ function M.render()
 		-1,
 		false,
 		vim.tbl_map(function(item)
-			return table.concat(item)
+			return item[1] .. item[2] .. item[3]
 		end, M.items)
 	)
 	if M.selected ~= -1 then
