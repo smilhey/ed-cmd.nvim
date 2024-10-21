@@ -33,6 +33,9 @@ To cancel a command, any keymap that previously worked should do (apart from the
 			-- You enter normal mode in the cmdline with edit, execute a
 			-- command from normal mode with execute and close the cmdline in
 			-- normal mode with close
+
+            -- The keymaps fields also accept list of keymaps
+            -- cmdline = { keymaps = { close = { "<C-C>" , "q" } } },
 			pumenu = { max_items = 100 },
 		})
 	end,
