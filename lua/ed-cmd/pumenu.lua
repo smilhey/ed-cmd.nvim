@@ -15,8 +15,8 @@ function M.init_buffer()
 end
 
 function M.update_window()
-	local height = math.min(#M.items, M.max_items, math.max(vim.o.lines - M.row - 1, M.row))
-	M.height = height
+	local height = M.height
+	local width = M.width
 	local col = M.col
 	local row
 	if M.row == 0 then
@@ -29,7 +29,6 @@ function M.update_window()
 	if M.row ~= 0 and M.col ~= 0 then
 		col = col - 1
 	end
-	local width = M.width
 	M.pum_row = row
 	M.pum_col = col
 	vim.api.nvim_win_set_config(M.win, { relative = "editor", width = width, height = height, row = row, col = col })
@@ -75,39 +74,44 @@ function M.render_scrollbar()
 	end
 end
 
-function M.highlight() end
-
 function M.render()
 	M.init_buffer()
 	M.init_window()
-	vim.api.nvim_buf_set_lines(M.buf, 0, -1, false, M.string_items)
+	vim.api.nvim_buf_set_lines(
+		M.buf,
+		0,
+		-1,
+		false,
+		vim.tbl_map(function(item)
+			return table.concat(item)
+		end, M.items)
+	)
 	if M.selected ~= -1 then
+		local word, kind, menu = unpack(M.items[M.selected + 1])
 		vim.api.nvim_buf_set_extmark(
 			M.buf,
 			M.ns,
 			M.selected,
 			0,
-			{ end_col = M.kind_col_start, strict = false, hl_group = "PmenuSel" }
+			{ end_col = #word, strict = false, hl_group = "PmenuSel" }
 		)
-		local has_kind = M.string_items[M.selected + 1]:sub(M.kind_col_start + 1, M.kind_col_start + 1) ~= " "
-		local has_menu = M.string_items[M.selected + 1]:sub(M.menu_col_start + 1, M.menu_col_start + 1) ~= " "
-
+		local has_kind = kind:sub(1, 1) ~= " "
+		local has_menu = menu:sub(1, 1) ~= " "
 		local hl_kind_sel = has_kind and "PmenuKindSel" or "PmenuSel"
 		local hl_menu_sel = has_menu and "PmenuExtraSel" or "PmenuSel"
-
 		vim.api.nvim_buf_set_extmark(
 			M.buf,
 			M.ns,
 			M.selected,
-			M.kind_col_start,
-			{ end_col = M.kind_col_end, hl_group = hl_kind_sel }
+			#word,
+			{ end_col = #kind + #word, hl_group = hl_kind_sel }
 		)
 		vim.api.nvim_buf_set_extmark(
 			M.buf,
 			M.ns,
 			M.selected,
-			M.menu_col_start,
-			{ end_col = M.menu_col_end, hl_group = hl_menu_sel }
+			#word + #kind,
+			{ end_col = #menu + #word + #kind, hl_group = hl_menu_sel }
 		)
 		vim.api.nvim_win_set_cursor(M.win, { M.selected + 1, 0 })
 	end
@@ -122,39 +126,35 @@ end
 
 function M.format(items)
 	local word_len, kind_len, menu_len = 0, 0, 0
-	local string_items = {}
 	for _, item in ipairs(items) do
 		if M.row == 0 or M.col ~= 0 then
 			item[1] = " " .. item[1]
 		end
-		word_len = math.max(word_len, #item[1])
-		kind_len = math.max(kind_len, #item[2])
-		menu_len = math.max(menu_len, #item[3])
+		word_len = math.max(word_len, vim.api.nvim_strwidth(item[1]))
+		kind_len = math.max(kind_len, vim.api.nvim_strwidth(item[2]))
+		menu_len = math.max(menu_len, vim.api.nvim_strwidth(item[3]))
 	end
 	local has_kind = kind_len == 0 and 0 or 1
 	local has_menu = menu_len == 0 and 0 or 1
+	local padding = #M.items > M.height and 3 or 2
 	for _, item in ipairs(items) do
 		item[1] = item[1]
-			.. string.rep(" ", word_len - #item[1])
+			.. string.rep(" ", word_len - vim.api.nvim_strwidth(item[1]))
 			.. (" "):rep(has_kind + has_menu - has_kind * has_menu)
-			.. (" "):rep(3 * (1 - has_kind) * (1 - has_menu))
+			.. (" "):rep(padding * (1 - has_kind) * (1 - has_menu))
 		item[2] = item[2]
-			.. string.rep(" ", kind_len - #item[2])
+			.. string.rep(" ", kind_len - vim.api.nvim_strwidth(item[2]))
 			.. (" "):rep(has_menu * has_kind)
-			.. (" "):rep(3 * (1 - has_menu) * has_kind)
-		item[3] = item[3] .. string.rep(" ", menu_len - #item[3]) .. (" "):rep(3 * has_menu)
-		local match = item[1] .. item[2] .. item[3]
-		string_items[#string_items + 1] = match
+			.. (" "):rep(padding * (1 - has_menu) * has_kind)
+		item[3] = item[3] .. string.rep(" ", menu_len - vim.api.nvim_strwidth(item[3])) .. (" "):rep(padding * has_menu)
 	end
-	local kind_col_start, kind_col_end = #items[1][1], #items[1][1] + #items[1][2]
-	local menu_col_start, menu_col_end = #items[1][1] + #items[1][2], #items[1][1] + #items[1][2] + #items[1][3]
-	M.width = word_len + has_kind + kind_len + has_menu + menu_len + 3
-	return string_items, kind_col_start, kind_col_end, menu_col_start, menu_col_end
 end
 
 function M.on_show(...)
 	M.items, M.selected, M.row, M.col, _ = ...
-	M.string_items, M.kind_col_start, M.kind_col_end, M.menu_col_start, M.menu_col_end = M.format(M.items)
+	M.height = math.min(#M.items, M.max_items, math.max(vim.o.lines - M.row - 1, M.row))
+	M.format(M.items)
+	M.width = vim.api.nvim_strwidth(table.concat(M.items[1]))
 	M.render()
 end
 
