@@ -74,18 +74,7 @@ function M.render_scrollbar()
 	end
 end
 
-function M.render()
-	M.init_buffer()
-	M.init_window()
-	vim.api.nvim_buf_set_lines(
-		M.buf,
-		0,
-		-1,
-		false,
-		vim.tbl_map(function(item)
-			return item[1] .. item[2] .. item[3]
-		end, M.items)
-	)
+function M.render_selected_line()
 	if M.selected ~= -1 then
 		local word, kind, menu = unpack(M.items[M.selected + 1])
 		vim.api.nvim_buf_set_extmark(
@@ -115,6 +104,21 @@ function M.render()
 		)
 		vim.api.nvim_win_set_cursor(M.win, { M.selected + 1, 0 })
 	end
+end
+
+function M.render()
+	M.init_buffer()
+	M.init_window()
+	vim.api.nvim_buf_set_lines(
+		M.buf,
+		0,
+		-1,
+		false,
+		vim.tbl_map(function(item)
+			return item[1] .. item[2] .. item[3]
+		end, M.items)
+	)
+	M.render_selected_line()
 	M.render_scrollbar()
 end
 
