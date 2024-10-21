@@ -222,10 +222,6 @@ function M.setup(opts)
 	vim.api.nvim_set_hl(M.ns, "NormalFloat", { link = "MsgArea" })
 end
 
-function M.disable(opts)
-	vim.keymap.del("c", opts.keymaps.edit, {})
-end
-
 function M.handler(event, ...)
 	if event == "cmdline_show" then
 		M.on_show(...)
