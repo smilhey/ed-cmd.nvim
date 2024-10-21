@@ -3,7 +3,7 @@ local ESC = vim.api.nvim_replace_termcodes("<esc>", true, true, true)
 
 local win_opts = {
 	relative = "editor",
-	zindex = 200,
+	zindex = 250,
 	row = vim.o.lines,
 	col = 0,
 	style = "minimal",
