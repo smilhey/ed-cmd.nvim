@@ -26,6 +26,12 @@ local M = {
 	history = {},
 }
 
+function M.set_cmdline_keymaps(mode, list_lhs, rhs, opts)
+	for _, lhs in ipairs(list_lhs) do
+		vim.keymap.set(mode, lhs, rhs, opts)
+	end
+end
+
 function M.init_buf()
 	if vim.api.nvim_buf_is_loaded(M.buf) then
 		return
@@ -35,12 +41,12 @@ function M.init_buf()
 	vim.bo[M.buf].buftype = "nofile"
 	vim.api.nvim_buf_set_name(M.buf, "cmdline")
 	M.exit_autocmd = vim.api.nvim_create_autocmd({ "BufLeave", "BufHidden" }, { buffer = M.buf, callback = M.exit })
-	vim.keymap.set("n", M.keymaps.close, M.exit, { buffer = M.buf, silent = true, noremap = true })
-	vim.keymap.set("n", M.keymaps.execute, function()
+	M.set_cmdline_keymaps("n", M.keymaps.close, M.exit, { buffer = M.buf, silent = true, noremap = true })
+	M.set_cmdline_keymaps("n", M.keymaps.execute, function()
 		local firstc, cmd = M.firstc, vim.api.nvim_get_current_line()
 		M.exit()
 		M.exe(firstc, cmd)
-	end, { silent = true, buffer = M.buf, noremap = true })
+	end, { buffer = M.buf, silent = true, noremap = true })
 	vim.api.nvim_create_autocmd({ "InsertEnter" }, {
 		buffer = M.buf,
 		callback = function()
@@ -209,9 +215,10 @@ end
 
 function M.setup(opts)
 	M.ns = vim.api.nvim_create_namespace("ed-cmdline")
-	M.keymaps.close = opts.keymaps.close
-	M.keymaps.execute = opts.keymaps.execute
-	vim.keymap.set("c", opts.keymaps.edit, M.enter_edit, { desc = "Enter cmdline edit mode" })
+	M.keymaps.close = type(opts.keymaps.close) == "string" and { opts.keymaps.close } or opts.keymaps.close
+	M.keymaps.execute = type(opts.keymaps.execute) == "string" and { opts.keymaps.execute } or opts.keymaps.execute
+	local keymaps_edit = type(opts.keymaps.edit) == "string" and { opts.keymaps.edit } or opts.keymaps.edit
+	M.set_cmdline_keymaps("c", keymaps_edit, M.enter_edit, { desc = "Enter cmdline edit mode" })
 	vim.api.nvim_set_hl(M.ns, "NormalFloat", { link = "MsgArea" })
 end
 
