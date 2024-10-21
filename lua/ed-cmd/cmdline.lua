@@ -81,7 +81,7 @@ function M.set_history()
 		vim.api.nvim_buf_set_extmark(M.buf, M.ns, i - 1, 0, {
 			right_gravity = false,
 			virt_text_pos = "inline",
-			virt_text = { { M.firstc, "NormalFloat" } },
+			virt_text = { { M.firstc, "MsgArea" } },
 		})
 	end
 end
@@ -103,7 +103,7 @@ function M.render()
 		vim.api.nvim_buf_set_extmark(M.buf, M.ns, linenr - 1, 0, {
 			right_gravity = false,
 			virt_text_pos = "inline",
-			virt_text = { { cmd_prompt, "NormalFloat" } },
+			virt_text = { { cmd_prompt, "MsgArea" } },
 		})
 	end
 	vim.api.nvim_buf_set_lines(M.buf, -2, -1, false, { M.cmd })
@@ -212,6 +212,7 @@ function M.setup(opts)
 	M.keymaps.close = opts.keymaps.close
 	M.keymaps.execute = opts.keymaps.execute
 	vim.keymap.set("c", opts.keymaps.edit, M.enter_edit, { desc = "Enter cmdline edit mode" })
+	vim.api.nvim_set_hl(M.ns, "NormalFloat", { link = "MsgArea" })
 end
 
 function M.disable(opts)
