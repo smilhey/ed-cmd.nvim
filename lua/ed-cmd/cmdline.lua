@@ -215,11 +215,31 @@ end
 
 function M.setup(opts)
 	M.ns = vim.api.nvim_create_namespace("ed-cmdline")
+	M.augroup = vim.api.nvim_create_augroup("ed-cmdline", {})
 	M.keymaps.close = type(opts.keymaps.close) == "string" and { opts.keymaps.close } or opts.keymaps.close
 	M.keymaps.execute = type(opts.keymaps.execute) == "string" and { opts.keymaps.execute } or opts.keymaps.execute
 	local keymaps_edit = type(opts.keymaps.edit) == "string" and { opts.keymaps.edit } or opts.keymaps.edit
 	M.set_cmdline_keymaps("c", keymaps_edit, M.enter_edit, { desc = "Enter cmdline edit mode" })
 	vim.api.nvim_set_hl(M.ns, "NormalFloat", { link = "MsgArea" })
+	vim.api.nvim_create_autocmd("VimResized", {
+		desc = "ed-cmd keep its relative pos",
+		group = M.augroup,
+		callback = function()
+			M.win_opts = {
+				relative = "editor",
+				zindex = 250,
+				row = vim.o.lines,
+				col = 0,
+				style = "minimal",
+				width = vim.o.columns,
+				height = 1,
+			}
+			if vim.api.nvim_win_is_valid(M.win) then
+				vim.api.nvim_win_set_config(M.win, M.win_opts)
+				M.render()
+			end
+		end,
+	})
 end
 
 function M.handler(event, ...)
