@@ -41,6 +41,20 @@ To cancel a command, any keymap that previously worked should do (apart from the
 	end,
 }
 ```
+## Usage
+
+If you want to use a multiple characters keymap for "edit" ("ij" for example), all characters ("i") but the last will still
+be inserted in the command line before entering "normal" mode. To avoid that, you might want to set the following keymap rather 
+than passing it to the setup function :
+
+```lua
+vim.keymap.set("c", "ij", function()
+	require("ed-cmd.cmdline").enter_edit()
+	vim.schedule(function()
+		vim.cmd("silent norm lxh")
+	end)
+end, {})
+```
 
 ## License
 
