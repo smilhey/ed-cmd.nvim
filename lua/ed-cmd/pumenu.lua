@@ -19,14 +19,14 @@ function M.update_window()
 	local width = M.width
 	local col = M.col
 	local row
-	if M.row == 0 then
+	if M.grid == -1 then
 		row = vim.o.lines - vim.o.cmdheight - height
 	elseif height > vim.o.lines - M.row - 1 then
 		row = M.row - height
 	else
 		row = M.row + 1
 	end
-	if M.row ~= 0 and M.col ~= 0 then
+	if M.col ~= 0 then
 		col = col - 1
 	end
 	M.pum_row = row
@@ -155,7 +155,7 @@ function M.format(items)
 end
 
 function M.on_show(...)
-	M.items, M.selected, M.row, M.col, _ = ...
+	M.items, M.selected, M.row, M.col, M.grid = ...
 	M.height = math.min(#M.items, M.max_items, math.max(vim.o.lines - M.row - 1, M.row))
 	M.format(M.items)
 	M.width = vim.api.nvim_strwidth(table.concat(M.items[1]))
