@@ -26,7 +26,7 @@ function M.update_window()
 	else
 		row = M.row + 1
 	end
-	if M.col ~= 0 then
+	if M.grid == 1 and M.col ~= 0 then
 		col = col - 1
 	end
 	M.pum_row = row
