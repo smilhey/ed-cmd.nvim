@@ -16,8 +16,8 @@ end
 
 function M.update_window()
 	local height = M.height
-	local width = M.width
 	local col = M.col
+	local width = math.min(M.width, vim.o.columns - col)
 	local row
 	if M.grid == -1 then
 		row = vim.o.lines - vim.o.cmdheight - height
@@ -192,7 +192,7 @@ function M.setup(opts)
 		else
 			return {
 				height = M.height,
-				width = M.width,
+				width = math.min(M.width, vim.o.columns - M.pum_col),
 				row = M.pum_row,
 				col = M.pum_col,
 				size = #M.items,
