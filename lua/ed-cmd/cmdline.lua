@@ -221,6 +221,9 @@ function M.setup(opts)
 	local keymaps_edit = type(opts.keymaps.edit) == "string" and { opts.keymaps.edit } or opts.keymaps.edit
 	M.set_cmdline_keymaps("c", keymaps_edit, M.enter_edit, { desc = "Enter cmdline edit mode" })
 	vim.api.nvim_set_hl(M.ns, "NormalFloat", { link = "MsgArea" })
+	vim.api.nvim_set_hl(M.ns, "Search", { link = "MsgArea" })
+	vim.api.nvim_set_hl(M.ns, "CurSearch", { link = "MsgArea" })
+	vim.api.nvim_set_hl(M.ns, "Substitute", { link = "MsgArea" })
 	vim.api.nvim_create_autocmd("VimResized", {
 		desc = "ed-cmd keep its relative pos",
 		group = M.augroup,
