@@ -3,12 +3,12 @@
 https://github.com/user-attachments/assets/f3633128-1e53-4585-bf63-d94e3bce8bf6
 
 This plugin allows you to edit the cmdline like you would a normal buffer, in a
-similar way as the cmdwindow (Ctrl-F in cmd mode). However unlike the cmdwindow
-you keep the preview features ('incsearch', 'inccommand') when inserting the
+similar way as the cmdwindow (Ctrl-F in cmd mode). However, unlike the cmdwindow
+you keep the preview features ('incsearch', 'inccommand') when inserting in the
 cmdline.
 
-This plugin disable the default cmdline and popup menu so there might be some
-difference in behaviour (cases that I might not have encountered and replicated)
+This plugin disables the default cmdline and popup menu so there might be some
+differences in behaviour (cases that I might not have encountered and replicated)
 
 ## Features
 
@@ -45,7 +45,7 @@ To cancel a command, any keymap that previously worked should do (apart from the
 
 If you want to use a multiple characters keymap for "edit" ("ij" for example), all characters ("i") but the last will still
 be inserted in the command line before entering "normal" mode. To avoid that, you might want to set the following keymap rather 
-than passing it to the setup function :
+than passing it to the setup function (adapt it to the number of characters you actually use) :
 
 ```lua
 vim.keymap.set("c", "ij", function()
