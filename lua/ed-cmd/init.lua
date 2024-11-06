@@ -2,7 +2,7 @@ local M = { enabled = false }
 
 M.opts = {
 	cmdline = { keymaps = { edit = "<ESC>", execute = "<CR>", close = "<C-C>" } },
-	pumenu = { max_items = 100 },
+	pumenu = {},
 }
 
 local cmdline = require("ed-cmd.cmdline")
