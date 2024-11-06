@@ -48,6 +48,7 @@ function M.init_window()
 		})
 		vim.wo[M.win].wrap = false
 	end
+	vim.wo[M.win].winblend = vim.o.pumblend
 	vim.api.nvim_win_set_hl_ns(M.win, M.ns)
 	M.update_window()
 end
