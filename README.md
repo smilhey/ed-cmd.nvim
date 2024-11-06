@@ -33,18 +33,19 @@ To cancel a command, any keymap that previously worked should do (apart from the
 			-- You enter normal mode in the cmdline with edit, execute a
 			-- command from normal mode with execute and close the cmdline in
 			-- normal mode with close
-
 			-- The keymaps fields also accept list of keymaps
 			-- cmdline = { keymaps = { close = { "<C-C>" , "q" } } },
-			pumenu = { max_items = 100 },
 		})
 	end,
 }
 ```
+
 ## Usage
 
+Height, width and blend options can be defined as usual with set pumwidth (vim.o.pumwidth) ...
+
 If you want to use a multiple characters keymap for "edit" ("ij" for example), all characters ("i") but the last will still
-be inserted in the command line before entering "normal" mode. To avoid that, you might want to set the following keymap rather 
+be inserted in the command line before entering "normal" mode. To avoid that, you might want to set the following keymap rather
 than passing it to the setup function (adapt it to the number of characters you actually use) :
 
 ```lua
