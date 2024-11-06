@@ -1,7 +1,6 @@
 local M = {
 	buf = -1,
 	win = -1,
-	max_items = 20,
 }
 
 function M.init_buffer()
@@ -85,8 +84,8 @@ function M.render_selected_line()
 			0,
 			{ end_col = #word, strict = false, hl_group = "PmenuSel" }
 		)
-		local has_kind = kind:sub(1, 1) ~= " "
-		local has_menu = menu:sub(1, 1) ~= " "
+		local has_kind = kind ~= "" and kind:sub(1, 1) ~= " "
+		local has_menu = menu ~= "" and menu:sub(1, 1) ~= " "
 		local hl_kind_sel = has_kind and "PmenuKindSel" or "PmenuSel"
 		local hl_menu_sel = has_menu and "PmenuExtraSel" or "PmenuSel"
 		vim.api.nvim_buf_set_extmark(
@@ -103,6 +102,18 @@ function M.render_selected_line()
 			#word + #kind,
 			{ end_col = #menu + #word + #kind, hl_group = hl_menu_sel }
 		)
+		if M.width > #word + #kind + #menu then
+			local end_hl_group = "PmenuSel"
+			end_hl_group = has_kind and hl_kind_sel or end_hl_group
+			end_hl_group = has_menu and hl_menu_sel or end_hl_group
+			vim.api.nvim_buf_set_extmark(
+				M.buf,
+				M.ns,
+				M.selected,
+				#word + #kind + #menu,
+				{ end_row = M.selected + 1, end_col = 0, strict = false, hl_group = end_hl_group, hl_eol = true }
+			)
+		end
 		vim.api.nvim_win_set_cursor(M.win, { M.selected + 1, 0 })
 	end
 end
@@ -157,9 +168,10 @@ end
 
 function M.on_show(...)
 	M.items, M.selected, M.row, M.col, M.grid = ...
-	M.height = math.min(#M.items, M.max_items, math.max(vim.o.lines - M.row - 1, M.row))
+	local height = vim.o.pumheight == 0 and 1000 or vim.o.pumheight
+	M.height = math.min(#M.items, height, math.max(vim.o.lines - M.row - 1, M.row))
 	M.format(M.items)
-	M.width = vim.api.nvim_strwidth(table.concat(M.items[1]))
+	M.width = math.max(vim.api.nvim_strwidth(table.concat(M.items[1])), vim.o.pumwidth)
 	M.render()
 end
 
@@ -183,7 +195,6 @@ function M.handler(event, ...)
 end
 
 function M.setup(opts)
-	M.max_items = opts.max_items
 	M.ns = vim.api.nvim_create_namespace("ed-pumenu")
 	vim.api.nvim_set_hl(M.ns, "Normal", { link = "Pmenu" })
 	M.old_pum_getpos = vim.fn.pum_getpos
