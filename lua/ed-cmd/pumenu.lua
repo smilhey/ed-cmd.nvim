@@ -13,43 +13,27 @@ function M.init_buffer()
 	vim.api.nvim_buf_set_name(M.buf, "pumenu")
 end
 
-function M.update_window()
-	local height = M.height
-	local col = M.col
-	local width = math.min(M.width, vim.o.columns - col)
-	local row
-	if M.grid == -1 then
-		row = vim.o.lines - vim.o.cmdheight - height
-	elseif height > vim.o.lines - M.row - 1 then
-		row = M.row - height
-	else
-		row = M.row + 1
-	end
-	if M.grid == 1 and M.col ~= 0 then
-		col = col - 1
-	end
-	M.pum_row = row
-	M.pum_col = col
-	vim.api.nvim_win_set_config(M.win, { relative = "editor", width = width, height = height, row = row, col = col })
-end
-
 function M.init_window()
 	if not vim.api.nvim_win_is_valid(M.win) then
 		M.win = vim.api.nvim_open_win(M.buf, false, {
 			relative = "editor",
-			width = 1,
-			height = 1,
-			row = 1,
-			col = 1,
+			width = M.width,
+			height = M.height,
+			row = M.row,
+			col = M.col,
 			style = "minimal",
 			zindex = 250,
 			focusable = false,
 		})
 		vim.wo[M.win].wrap = false
+		vim.wo[M.win].winblend = vim.o.pumblend
+		vim.api.nvim_win_set_hl_ns(M.win, M.ns)
+	else
+		vim.api.nvim_win_set_config(
+			M.win,
+			{ relative = "editor", width = M.width, height = M.height, row = M.row, col = M.col }
+		)
 	end
-	vim.wo[M.win].winblend = vim.o.pumblend
-	vim.api.nvim_win_set_hl_ns(M.win, M.ns)
-	M.update_window()
 end
 
 function M.render_scrollbar()
@@ -168,10 +152,21 @@ end
 
 function M.on_show(...)
 	M.items, M.selected, M.row, M.col, M.grid = ...
-	local height = vim.o.pumheight == 0 and 1000 or vim.o.pumheight
-	M.height = math.min(#M.items, height, math.max(vim.o.lines - M.row - 1, M.row))
+	M.height = vim.o.pumheight == 0 and 1000 or vim.o.pumheight
+	M.height = math.min(#M.items, M.height, math.max(vim.o.lines - M.row - 1, M.row))
+	if M.grid == -1 then
+		M.row = vim.o.lines - vim.o.cmdheight - M.height
+	elseif M.height > vim.o.lines - M.row - 1 then
+		M.row = M.row - M.height
+	else
+		M.row = M.row + 1
+	end
+	if M.grid == 1 and M.col ~= 0 then
+		M.col = M.col - 1
+	end
 	M.format(M.items)
-	M.width = math.max(vim.api.nvim_strwidth(table.concat(M.items[1])), vim.o.pumwidth)
+	M.width = math.min(vim.api.nvim_strwidth(table.concat(M.items[1])), vim.o.columns - M.col)
+	M.width = math.max(M.width, vim.o.pumwidth)
 	M.render()
 end
 
@@ -204,9 +199,9 @@ function M.setup(opts)
 		else
 			return {
 				height = M.height,
-				width = math.min(M.width, vim.o.columns - M.pum_col),
-				row = M.pum_row,
-				col = M.pum_col,
+				width = M.width,
+				row = M.row,
+				col = M.col,
 				size = #M.items,
 				scrollbar = #M.items > M.height,
 			}
