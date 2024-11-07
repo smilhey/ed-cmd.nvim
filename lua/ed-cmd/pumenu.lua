@@ -27,6 +27,7 @@ function M.init_window()
 		})
 		vim.wo[M.win].wrap = false
 		vim.wo[M.win].winblend = vim.o.pumblend
+		vim.wo[M.win].cursorlineopt = "line"
 		vim.api.nvim_win_set_hl_ns(M.win, M.ns)
 	else
 		vim.api.nvim_win_set_config(
@@ -59,37 +60,32 @@ function M.render_scrollbar()
 end
 
 function M.render_selected_line()
+	vim.wo[M.win].cursorline = false
 	if M.selected ~= -1 then
+		vim.wo[M.win].cursorline = true
 		local word, kind, menu = unpack(M.items[M.selected + 1])
-		vim.api.nvim_buf_set_extmark(
-			M.buf,
-			M.ns,
-			M.selected,
-			0,
-			{ end_col = #word, strict = false, hl_group = "PmenuSel" }
-		)
 		local has_kind = kind ~= "" and kind:sub(1, 1) ~= " "
 		local has_menu = menu ~= "" and menu:sub(1, 1) ~= " "
-		local hl_kind_sel = has_kind and "PmenuKindSel" or "PmenuSel"
-		local hl_menu_sel = has_menu and "PmenuExtraSel" or "PmenuSel"
-		vim.api.nvim_buf_set_extmark(
-			M.buf,
-			M.ns,
-			M.selected,
-			#word,
-			{ end_col = #kind + #word, hl_group = hl_kind_sel }
-		)
-		vim.api.nvim_buf_set_extmark(
-			M.buf,
-			M.ns,
-			M.selected,
-			#word + #kind,
-			{ end_col = #menu + #word + #kind, hl_group = hl_menu_sel }
-		)
-		if M.width > #word + #kind + #menu then
-			local end_hl_group = "PmenuSel"
-			end_hl_group = has_kind and hl_kind_sel or end_hl_group
-			end_hl_group = has_menu and hl_menu_sel or end_hl_group
+		if has_kind then
+			vim.api.nvim_buf_set_extmark(
+				M.buf,
+				M.ns,
+				M.selected,
+				#word,
+				{ end_col = #kind + #word, hl_group = "PmenuKindSel" }
+			)
+		end
+		if has_menu then
+			vim.api.nvim_buf_set_extmark(
+				M.buf,
+				M.ns,
+				M.selected,
+				#word + #kind,
+				{ end_col = #menu + #word + #kind, hl_group = "PmenuExtraSel" }
+			)
+		end
+		if M.width > #word + #kind + #menu and (has_kind or has_menu) then
+			local end_hl_group = has_menu and "PmenuExtraSel" or "PmenuKindSel"
 			vim.api.nvim_buf_set_extmark(
 				M.buf,
 				M.ns,
@@ -192,6 +188,7 @@ end
 function M.setup(opts)
 	M.ns = vim.api.nvim_create_namespace("ed-pumenu")
 	vim.api.nvim_set_hl(M.ns, "Normal", { link = "Pmenu" })
+	vim.api.nvim_set_hl(M.ns, "CursorLine", { link = "PmenuSel" })
 	M.old_pum_getpos = vim.fn.pum_getpos
 	vim.fn.pum_getpos = function()
 		if M.win == -1 or not vim.api.nvim_win_is_valid(M.win) then
