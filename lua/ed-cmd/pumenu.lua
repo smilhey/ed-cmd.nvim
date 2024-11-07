@@ -1,3 +1,4 @@
+local cmdline = require("ed-cmd.cmdline")
 local M = {
 	buf = -1,
 	win = -1,
@@ -148,11 +149,13 @@ end
 
 function M.on_show(...)
 	M.items, M.selected, M.row, M.col, M.grid = ...
+	if M.grid == -1 then
+		local win_config = vim.api.nvim_win_get_config(cmdline.win)
+		M.row = win_config.row
+	end
 	M.height = vim.o.pumheight == 0 and 1000 or vim.o.pumheight
 	M.height = math.min(#M.items, M.height, math.max(vim.o.lines - M.row - 1, M.row))
-	if M.grid == -1 then
-		M.row = vim.o.lines - vim.o.cmdheight - M.height
-	elseif M.height > vim.o.lines - M.row - 1 then
+	if M.height > vim.o.lines - M.row - 1 then
 		M.row = M.row - M.height
 	else
 		M.row = M.row + 1

@@ -1,16 +1,6 @@
 local ENTER = vim.api.nvim_replace_termcodes("<cr>", true, true, true)
 local ESC = vim.api.nvim_replace_termcodes("<esc>", true, true, true)
 
-local win_opts = {
-	relative = "editor",
-	zindex = 250,
-	row = vim.o.lines,
-	col = 0,
-	style = "minimal",
-	width = vim.o.columns,
-	height = 1,
-}
-
 local M = {
 	mode = "cmd",
 	buf = -1,
@@ -20,8 +10,6 @@ local M = {
 	pos = 0,
 	firtc = nil,
 	prompt = nil,
-	cmdheight = 0,
-	win_opts = win_opts,
 	keymaps = {},
 	history = {},
 }
@@ -58,9 +46,16 @@ end
 
 function M.init_win()
 	if not vim.api.nvim_win_is_valid(M.win) then
-		M.cmdheight = vim.o.cmdheight
 		M.curr_win = vim.api.nvim_get_current_win()
-		M.win = vim.api.nvim_open_win(M.buf, false, M.win_opts)
+		M.win = vim.api.nvim_open_win(M.buf, false, {
+			relative = "editor",
+			zindex = 250,
+			row = vim.o.lines - vim.o.cmdheight,
+			col = 0,
+			style = "minimal",
+			width = vim.o.columns,
+			height = 1,
+		})
 		vim.wo[M.win].winfixbuf = true
 		vim.wo[M.win].virtualedit = "all,onemore"
 		vim.api.nvim_win_set_hl_ns(M.win, M.ns)
@@ -228,17 +223,13 @@ function M.setup(opts)
 		desc = "ed-cmd keep its relative pos",
 		group = M.augroup,
 		callback = function()
-			M.win_opts = {
-				relative = "editor",
-				zindex = 250,
-				row = vim.o.lines,
-				col = 0,
-				style = "minimal",
-				width = vim.o.columns,
-				height = 1,
-			}
 			if vim.api.nvim_win_is_valid(M.win) then
-				vim.api.nvim_win_set_config(M.win, M.win_opts)
+				vim.api.nvim_win_set_config(M.win, {
+					row = vim.o.lines - vim.o.cmdheight,
+					col = 0,
+					width = vim.o.columns,
+					height = 1,
+				})
 				M.render()
 			end
 		end,
