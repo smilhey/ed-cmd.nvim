@@ -239,7 +239,6 @@ function M.setup(opts)
 			if vim.v.event.cmdtype == "/" or vim.v.event.cmdtype == "?" then
 				local pattern = vim.fn.getcmdline()
 				local result = vim.fn.search(pattern, "nc")
-				vim.fn.histdel("search", -1)
 				local cmdheight = vim.o.cmdheight
 				if result == 0 then
 					vim.ui_attach(M.ns_search, { ext_messages = true }, M.search_handler)
