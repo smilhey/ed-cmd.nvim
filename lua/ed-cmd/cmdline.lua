@@ -161,6 +161,15 @@ function M.reemit(mode)
 	M.mode = mode
 end
 
+function M.search_handler(event, ...)
+	if event == "msg_show" then
+		local kind, _, _ = ...
+		if kind == "return_prompt" then
+			vim.api.nvim_input("<cr>")
+		end
+	end
+end
+
 function M.on_show(...)
 	if M.mode == "edit" then
 		M.render()
@@ -210,6 +219,7 @@ end
 
 function M.setup(opts)
 	M.ns = vim.api.nvim_create_namespace("ed-cmdline")
+	M.ns_search = vim.api.nvim_create_namespace("ed-cmdline-search")
 	M.augroup = vim.api.nvim_create_augroup("ed-cmdline", {})
 	M.keymaps.close = type(opts.keymaps.close) == "string" and { opts.keymaps.close } or opts.keymaps.close
 	M.keymaps.execute = type(opts.keymaps.execute) == "string" and { opts.keymaps.execute } or opts.keymaps.execute
@@ -219,6 +229,26 @@ function M.setup(opts)
 	vim.api.nvim_set_hl(M.ns, "Search", { link = "MsgArea" })
 	vim.api.nvim_set_hl(M.ns, "CurSearch", { link = "MsgArea" })
 	vim.api.nvim_set_hl(M.ns, "Substitute", { link = "MsgArea" })
+	vim.api.nvim_create_autocmd("CmdlineLeave", {
+		desc = "Handling hit-return prompt on search not found",
+		group = M.augroup,
+		callback = function()
+			local cmd_type = vim.fn.getcmdtype()
+			if cmd_type == "/" or cmd_type == "?" then
+				local pattern = vim.fn.getcmdline()
+				local result = vim.fn.search(pattern, "nc")
+				local cmdheight = vim.o.cmdheight
+				if result == 0 then
+					vim.ui_attach(M.ns_search, { ext_messages = true }, M.search_handler)
+					vim.o.cmdheight = cmdheight
+					vim.schedule(function()
+						vim.ui_detach(M.ns_search)
+						vim.notify("E486: Pattern not found: " .. pattern, vim.log.levels.ERROR)
+					end)
+				end
+			end
+		end,
+	})
 	vim.api.nvim_create_autocmd("VimResized", {
 		desc = "ed-cmd keep its relative pos",
 		group = M.augroup,
