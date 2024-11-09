@@ -233,17 +233,20 @@ function M.setup(opts)
 		desc = "Handling hit-return prompt on search not found",
 		group = M.augroup,
 		callback = function()
-			local cmd_type = vim.fn.getcmdtype()
-			if cmd_type == "/" or cmd_type == "?" then
+			if vim.v.event.abort then
+				return
+			end
+			if vim.v.event.cmdtype == "/" or vim.v.event.cmdtype == "?" then
 				local pattern = vim.fn.getcmdline()
 				local result = vim.fn.search(pattern, "nc")
+				vim.fn.histdel("search", -1)
 				local cmdheight = vim.o.cmdheight
 				if result == 0 then
 					vim.ui_attach(M.ns_search, { ext_messages = true }, M.search_handler)
 					vim.o.cmdheight = cmdheight
 					vim.schedule(function()
 						vim.ui_detach(M.ns_search)
-						vim.notify("E486: Pattern not found: " .. pattern, vim.log.levels.ERROR)
+						vim.api.nvim_echo({ { vim.v.errmsg, "ErrorMsg" } }, false, {})
 					end)
 				end
 			end
