@@ -42,7 +42,7 @@ To cancel a command, any keymap that previously worked should do (apart from the
 
 ## Usage
 
-Height, width and blend options can be defined as usual with set pumwidth (vim.o.pumwidth) ...
+Popupmenu height, width and blend options can be defined as usual with set pumwidth (vim.o.pumwidth) ...
 
 If you want to use a multiple characters keymap for "edit" ("ij" for example), all characters ("i") but the last will still
 be inserted in the command line before entering "normal" mode. To avoid that, you might want to set the following keymap rather
