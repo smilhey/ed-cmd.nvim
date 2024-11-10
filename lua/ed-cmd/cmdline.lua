@@ -2,7 +2,7 @@ local ENTER = vim.api.nvim_replace_termcodes("<cr>", true, true, true)
 local ESC = vim.api.nvim_replace_termcodes("<esc>", true, true, true)
 
 local M = {
-	mode = "cmd",
+	intercept = false,
 	buf = -1,
 	win = -1,
 	curr_win = -1,
@@ -30,11 +30,7 @@ function M.init_buf()
 	vim.api.nvim_buf_set_name(M.buf, "cmdline")
 	M.exit_autocmd = vim.api.nvim_create_autocmd({ "BufLeave", "BufHidden" }, { buffer = M.buf, callback = M.exit })
 	M.set_cmdline_keymaps("n", M.keymaps.close, M.exit, { buffer = M.buf, silent = true, noremap = true })
-	M.set_cmdline_keymaps("n", M.keymaps.execute, function()
-		local firstc, cmd = M.firstc, vim.api.nvim_get_current_line()
-		M.exit()
-		M.exe(firstc, cmd)
-	end, { buffer = M.buf, silent = true, noremap = true })
+	M.set_cmdline_keymaps("n", M.keymaps.execute, M.exe, { buffer = M.buf, silent = true, noremap = true })
 	vim.api.nvim_create_autocmd({ "InsertEnter" }, {
 		buffer = M.buf,
 		callback = function()
@@ -115,7 +111,7 @@ function M.render()
 end
 
 function M.enter_edit()
-	M.mode = "edit"
+	M.intercept = true
 	vim.api.nvim_feedkeys(ESC, "nt", false)
 	vim.api.nvim_set_current_win(M.win)
 	M.pos = M.pos > 0 and M.pos - 1 or M.pos
@@ -130,18 +126,14 @@ function M.exit_edit()
 	local curpos = vim.api.nvim_win_get_cursor(M.win)
 	M.pos = curpos[2]
 	M.cmd = vim.api.nvim_get_current_line()
-	vim.schedule(function()
-		vim.api.nvim_del_autocmd(M.exit_autocmd)
-		vim.api.nvim_set_current_win(M.curr_win)
-		vim.api.nvim_input(M.firstc)
-		M.exit_autocmd = vim.api.nvim_create_autocmd({ "BufLeave", "BufHidden" }, { buffer = M.buf, callback = M.exit })
-	end)
+	vim.api.nvim_del_autocmd(M.exit_autocmd)
+	vim.api.nvim_set_current_win(M.curr_win)
+	M.exit_autocmd = vim.api.nvim_create_autocmd({ "BufLeave", "BufHidden" }, { buffer = M.buf, callback = M.exit })
+	vim.api.nvim_input(M.firstc)
 end
 
-function M.exe(firstc, cmd)
-	M.mode = "exe"
-	M.cmd = cmd
-	vim.api.nvim_input(firstc)
+function M.exe()
+	M.exit_edit()
 	vim.api.nvim_input(ENTER)
 end
 
@@ -156,12 +148,13 @@ function M.exit()
 	M.win = -1
 	M.buf = -1
 	M.history = {}
-	M.mode = "cmd"
+	M.intercept = false
 end
 
-function M.reemit(mode)
+function M.reemit()
 	vim.fn.setcmdline(M.cmd, M.pos + 1)
-	M.mode = mode
+	M.render()
+	M.intercept = false
 end
 
 function M.search_handler(event, ...)
@@ -174,24 +167,21 @@ function M.search_handler(event, ...)
 end
 
 function M.on_show(...)
-	if M.mode == "edit" then
-		M.render()
-		M.reemit("cmd")
-	elseif M.mode == "exe" then
-		M.reemit("exit")
-	elseif M.mode == "cmd" then
-		local content
-		content, M.pos, M.firstc, M.prompt, M.indent, _ = ...
-		local cmd = ""
-		for _, chunk in ipairs(content) do
-			cmd = cmd .. chunk[2]
-		end
-		if M.cmd == cmd then
-			return
-		end
-		M.cmd = cmd
-		M.render()
+	if M.intercept then
+		M.reemit()
+		return
 	end
+	local content
+	content, M.pos, M.firstc, M.prompt, M.indent, _ = ...
+	local cmd = ""
+	for _, chunk in ipairs(content) do
+		cmd = cmd .. chunk[2]
+	end
+	if M.cmd == cmd then
+		return
+	end
+	M.cmd = cmd
+	M.render()
 end
 
 function M.on_pos(...)
@@ -208,15 +198,8 @@ end
 
 function M.on_hide()
 	-- You can't go to edit mode when in a prompt
-	if M.prompt and M.prompt ~= "" then
+	if (M.prompt and M.prompt ~= "") or not M.intercept then
 		M.exit()
-		return
-	elseif M.mode == "edit" then
-		return
-	elseif M.mode == "cmd" or M.mode == "exit" then
-		M.exit()
-	else
-		vim.notify("cmdline: unexpected 'cmdline_hide' event in mode: " .. M.mode, vim.log.levels.ERROR)
 	end
 end
 
