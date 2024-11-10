@@ -1,6 +1,6 @@
 # Cmdline Editor Plugin for Neovim
 
-https://github.com/user-attachments/assets/f3633128-1e53-4585-bf63-d94e3bce8bf6
+https://github.com/user-attachments/assets/ce891412-29a7-486b-aa9d-20099a972514
 
 This plugin allows you to edit the cmdline like you would a normal buffer, in a
 similar way as the cmdwindow (Ctrl-F in cmd mode). However, unlike the cmdwindow
@@ -8,7 +8,9 @@ you keep the preview features ('incsearch', 'inccommand') when inserting in the
 cmdline.
 
 This plugin disables the default cmdline and popup menu so there might be some
-differences in behaviour (cases that I might not have encountered and replicated)
+differences in behaviour (cases that I might not have encountered and replicated).
+
+As a nice bonus you can put the cmdline wherever you want. (Even in its default position !)
 
 ## Features
 
@@ -84,7 +86,7 @@ centered_win_config = function()
 		height = 2,
 		style = "minimal",
 		border = "single",
-		zindex = 250,
+		zindex = 240 --popupmenu is 250
 	}
 end
 ```
