@@ -29,7 +29,20 @@ To cancel a command, any keymap that previously worked should do (apart from the
 	config = function()
 		require("ed-cmd").setup({
 			-- Those are the default options, you can just call setup({}) if you don't want to change the defaults
-			cmdline = { keymaps = { edit = "<ESC>", execute = "<CR>", close = "<C-C>" } },
+			cmdline = {
+				keymaps = { edit = "<ESC>", execute = "<CR>", close = "<C-C>" },
+				win_config = function()
+					return {
+						relative = "editor",
+						zindex = 250,
+						row = vim.o.lines - vim.o.cmdheight,
+						col = 0,
+						style = "minimal",
+						width = vim.o.columns,
+						height = 1,
+					}
+				end,
+			},
 			-- You enter normal mode in the cmdline with edit, execute a
 			-- command from normal mode with execute and close the cmdline in
 			-- normal mode with close
@@ -55,6 +68,25 @@ vim.keymap.set("c", "ij", function()
 		vim.cmd("silent norm lxh")
 	end)
 end, {})
+```
+
+You can choose to position the cmdline in a specific place through the win_config option. The win_config will also be called
+to set the cmdline window config on VimResize event. So, if you want the cmdline to keep a relative position (centered for example)
+you can just define a win_config that computes a position dynamically.
+
+```lua
+centered_win_config = function()
+	return {
+		relative = "editor",
+		width = math.ceil(vim.o.columns / 3),
+		row = math.floor(vim.o.lines * 0.2),
+		col = math.floor(vim.o.columns / 3),
+		height = 2,
+		style = "minimal",
+		border = "single",
+		zindex = 250,
+	}
+end
 ```
 
 ## License
