@@ -57,9 +57,9 @@ function M.init_win()
 			height = 1,
 		})
 		vim.wo[M.win].winfixbuf = true
-		vim.wo[M.win].virtualedit = "all,onemore"
+		vim.wo[M.win].virtualedit = "onemore"
+		vim.wo[M.win].wrap = false
 		vim.api.nvim_win_set_hl_ns(M.win, M.ns)
-		vim.api.nvim__redraw({ flush = true, cursor = true })
 	end
 end
 
@@ -78,38 +78,39 @@ end
 function M.set_history()
 	local history = M.get_history()
 	vim.api.nvim_buf_set_lines(M.buf, 0, -1, false, history)
-	for i = 1, #history do
-		vim.api.nvim_buf_set_extmark(M.buf, M.ns, i - 1, 0, {
-			right_gravity = false,
-			virt_text_pos = "inline",
-			virt_text = { { M.firstc, "MsgArea" } },
-		})
-	end
 end
 
 function M.render()
-	M.init_buf()
 	if not M.firstc or not M.prompt then
 		return
 	end
-	local linenr = vim.api.nvim_buf_line_count(M.buf)
-	local cmd_prompt = M.firstc .. (" "):rep(M.indent) .. M.prompt
+	M.init_buf()
 	if not vim.api.nvim_win_is_valid(M.win) then
-		if M.firstc then
+		M.init_win()
+		if M.prompt and M.prompt ~= "" then
+			vim.api.nvim_buf_set_lines(M.buf, 0, 0, false, { M.cmd })
+			vim.api.nvim_buf_set_extmark(M.buf, M.ns, 0, 0, {
+				virt_text = { { M.prompt, "MsgArea" } },
+				virt_text_pos = "inline",
+				right_gravity = false,
+			})
+			vim.api.nvim_win_set_cursor(M.win, { 1, M.pos })
+		elseif M.firstc and M.firstc ~= "" then
 			M.set_history()
+			vim.wo[M.win].statuscolumn = "%#MsgArea#" .. M.firstc
+			vim.api.nvim_buf_set_lines(M.buf, -1, -1, false, { (" "):rep(M.indent) .. M.cmd })
+			vim.api.nvim_win_set_cursor(M.win, { vim.fn.line("$", M.win), M.indent + M.pos })
 		end
-		-- empty line for extmark
-		vim.api.nvim_buf_set_lines(M.buf, -1, -1, false, { "" })
-		linenr = vim.api.nvim_buf_line_count(M.buf)
-		vim.api.nvim_buf_set_extmark(M.buf, M.ns, linenr - 1, 0, {
-			right_gravity = false,
-			virt_text_pos = "inline",
-			virt_text = { { cmd_prompt, "MsgArea" } },
-		})
+	else
+		vim.api.nvim_buf_set_lines(
+			M.buf,
+			vim.fn.line(".", M.win) - 1,
+			vim.fn.line(".", M.win),
+			false,
+			{ (" "):rep(M.indent) .. M.cmd }
+		)
+		vim.api.nvim_win_set_cursor(M.win, { vim.fn.line(".", M.win), M.indent + M.pos })
 	end
-	vim.api.nvim_buf_set_lines(M.buf, -2, -1, false, { M.cmd })
-	M.init_win()
-	vim.api.nvim_win_set_cursor(M.win, { linenr, M.pos })
 	vim.api.nvim__redraw({ flush = true, cursor = true, win = M.win })
 end
 
@@ -119,7 +120,9 @@ function M.enter_edit()
 	vim.api.nvim_set_current_win(M.win)
 	M.pos = M.pos > 0 and M.pos - 1 or M.pos
 	vim.schedule(function()
-		M.render()
+		if vim.api.nvim_win_is_valid(M.win) then
+			vim.api.nvim_win_set_cursor(M.win, { vim.fn.line(".", M.win), M.pos })
+		end
 	end)
 end
 
