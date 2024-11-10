@@ -150,8 +150,10 @@ end
 function M.on_show(...)
 	M.items, M.selected, M.row, M.col, M.grid = ...
 	if M.grid == -1 then
-		local win_config = vim.api.nvim_win_get_config(cmdline.win)
-		M.row = win_config.row
+		local curpos = vim.api.nvim_win_get_cursor(cmdline.win)
+		local screenpos = vim.fn.screenpos(cmdline.win, curpos[1], 0)
+		M.row = screenpos.row - 1
+		M.col = screenpos.col + M.col - 1
 	end
 	M.height = vim.o.pumheight == 0 and 1000 or vim.o.pumheight
 	M.height = math.min(#M.items, M.height, math.max(vim.o.lines - M.row - 1, M.row))
@@ -160,7 +162,7 @@ function M.on_show(...)
 	else
 		M.row = M.row + 1
 	end
-	if M.grid == 1 and M.col ~= 0 then
+	if M.col ~= 0 then
 		M.col = M.col - 1
 	end
 	M.format(M.items)

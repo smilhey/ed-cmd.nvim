@@ -40,18 +40,22 @@ function M.init_buf()
 	})
 end
 
+function M.win_config()
+	return {
+		relative = "editor",
+		zindex = 250,
+		row = vim.o.lines - vim.o.cmdheight,
+		col = 0,
+		style = "minimal",
+		width = vim.o.columns,
+		height = 1,
+	}
+end
+
 function M.init_win()
 	if not vim.api.nvim_win_is_valid(M.win) then
 		M.curr_win = vim.api.nvim_get_current_win()
-		M.win = vim.api.nvim_open_win(M.buf, false, {
-			relative = "editor",
-			zindex = 250,
-			row = vim.o.lines - vim.o.cmdheight,
-			col = 0,
-			style = "minimal",
-			width = vim.o.columns,
-			height = 1,
-		})
+		M.win = vim.api.nvim_open_win(M.buf, false, M.win_config())
 		vim.wo[M.win].winfixbuf = true
 		vim.wo[M.win].virtualedit = "onemore"
 		vim.wo[M.win].wrap = false
@@ -203,6 +207,22 @@ function M.on_hide()
 	end
 end
 
+function M.check_win_config(win_config)
+	if not win_config then
+		return false
+	end
+	local _, config = pcall(win_config)
+	local ok, win = pcall(vim.api.nvim_open_win, 0, false, config)
+	if ok then
+		vim.api.nvim_win_close(win, true)
+	else
+		vim.schedule(function()
+			vim.notify("ed-cmd.nvim : invalid cmdline.win_config function, running with default", vim.log.levels.WARN)
+		end)
+	end
+	return ok
+end
+
 function M.setup(opts)
 	M.ns = vim.api.nvim_create_namespace("ed-cmdline")
 	M.ns_search = vim.api.nvim_create_namespace("ed-cmdline-search")
@@ -211,6 +231,7 @@ function M.setup(opts)
 	M.keymaps.execute = type(opts.keymaps.execute) == "string" and { opts.keymaps.execute } or opts.keymaps.execute
 	local keymaps_edit = type(opts.keymaps.edit) == "string" and { opts.keymaps.edit } or opts.keymaps.edit
 	M.set_cmdline_keymaps("c", keymaps_edit, M.enter_edit, { desc = "Enter cmdline edit mode" })
+	M.win_config = M.check_win_config(opts.win_config) and opts.win_config or M.win_config
 	vim.api.nvim_set_hl(M.ns, "NormalFloat", { link = "MsgArea" })
 	vim.api.nvim_set_hl(M.ns, "Search", { link = "MsgArea" })
 	vim.api.nvim_set_hl(M.ns, "CurSearch", { link = "MsgArea" })
@@ -242,12 +263,7 @@ function M.setup(opts)
 		group = M.augroup,
 		callback = function()
 			if vim.api.nvim_win_is_valid(M.win) then
-				vim.api.nvim_win_set_config(M.win, {
-					row = vim.o.lines - vim.o.cmdheight,
-					col = 0,
-					width = vim.o.columns,
-					height = 1,
-				})
+				vim.api.nvim_win_set_config(M.win, M.win_config())
 				M.render()
 			end
 		end,
