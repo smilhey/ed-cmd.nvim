@@ -2,6 +2,9 @@ local cmdline = require("ed-cmd.cmdline")
 local M = {
 	buf = -1,
 	win = -1,
+	win_opts = function()
+		return {}
+	end,
 }
 
 function M.init_buffer()
@@ -15,26 +18,26 @@ function M.init_buffer()
 end
 
 function M.init_window()
+	local win_config = {
+		relative = "editor",
+		width = M.width,
+		height = M.height,
+		row = M.row,
+		col = M.col,
+		style = "minimal",
+		zindex = 250,
+		focusable = false,
+	}
+	win_config = vim.tbl_deep_extend("keep", win_config, M.win_opts())
 	if not vim.api.nvim_win_is_valid(M.win) then
-		M.win = vim.api.nvim_open_win(M.buf, false, {
-			relative = "editor",
-			width = M.width,
-			height = M.height,
-			row = M.row,
-			col = M.col,
-			style = "minimal",
-			zindex = 250,
-			focusable = false,
-		})
+		M.win = vim.api.nvim_open_win(M.buf, false, win_config)
 		vim.wo[M.win].wrap = false
 		vim.wo[M.win].winblend = vim.o.pumblend
 		vim.wo[M.win].cursorlineopt = "line"
 		vim.api.nvim_win_set_hl_ns(M.win, M.ns)
 	else
-		vim.api.nvim_win_set_config(
-			M.win,
-			{ relative = "editor", width = M.width, height = M.height, row = M.row, col = M.col }
-		)
+		vim.api.nvim_win_set_config(M.win, win_config)
+		vim.api.nvim_win_set_hl_ns(M.win, M.ns)
 	end
 end
 
@@ -156,15 +159,14 @@ function M.on_show(...)
 		M.col = screenpos.col + M.col - 1
 	end
 	M.height = vim.o.pumheight == 0 and 1000 or vim.o.pumheight
-	M.height = math.min(#M.items, M.height, math.max(vim.o.lines - M.row - 1, M.row))
-	if M.height > vim.o.lines - M.row - 1 then
-		M.row = M.row - M.height
+	local has_border = (M.win_opts().border and M.win_opts().border ~= "none") and 1 or 0
+	M.height = math.min(#M.items, M.height, math.max(vim.o.lines - M.row - 1, M.row) - has_border * 2)
+	if M.height + has_border * 2 > vim.o.lines - M.row - 1 then
+		M.row = M.row - M.height - has_border * 2
 	else
 		M.row = M.row + 1
 	end
-	if M.col ~= 0 then
-		M.col = M.col - 1
-	end
+	M.col = M.col - 1 - has_border
 	M.format(M.items)
 	M.width = math.min(vim.api.nvim_strwidth(table.concat(M.items[1])), vim.o.columns - M.col)
 	M.width = math.max(M.width, vim.o.pumwidth)
@@ -191,6 +193,7 @@ function M.handler(event, ...)
 end
 
 function M.setup(opts)
+	M.win_opts = type(opts.win_opts) == "function" and opts.win_opts or M.win_opts
 	M.ns = vim.api.nvim_create_namespace("ed-pumenu")
 	vim.api.nvim_set_hl(M.ns, "Normal", { link = "Pmenu" })
 	vim.api.nvim_set_hl(M.ns, "CursorLine", { link = "PmenuSel" })
