@@ -119,9 +119,10 @@ function M.enter_edit()
 	vim.api.nvim_feedkeys(ESC, "nt", false)
 	vim.api.nvim_set_current_win(M.win)
 	M.pos = M.pos > 0 and M.pos - 1 or M.pos
+	local line = vim.fn.line(".", M.win)
 	vim.schedule(function()
 		if vim.api.nvim_win_is_valid(M.win) then
-			vim.api.nvim_win_set_cursor(M.win, { vim.fn.line(".", M.win), M.pos })
+			vim.api.nvim_win_set_cursor(M.win, { line, M.pos })
 		end
 	end)
 end
