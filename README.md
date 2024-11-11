@@ -45,6 +45,11 @@ To cancel a command, any keymap that previously worked should do (apart from the
 					}
 				end,
 			},
+			pumenu = {
+				win_opts = function()
+					return {}
+				end,
+			},
 			-- You enter normal mode in the cmdline with edit, execute a
 			-- command from normal mode with execute and close the cmdline in
 			-- normal mode with close
@@ -57,7 +62,25 @@ To cancel a command, any keymap that previously worked should do (apart from the
 
 ## Usage
 
-Popupmenu height, width and blend options can be defined as usual with set pumwidth (vim.o.pumwidth) ...
+Popupmenu height, width and blend options can be defined as usual with set pumwidth (vim.o.pumwidth) ... but you can set
+extra options using the win_opts option. The following options will not be taken into account (relative, width, height, row, col,
+style, zindex, focusable).
+
+```lua
+example_win_opts = function()
+	local pum_info = vim.fn.pum_getpos()
+	local complete_info = vim.fn.complete_info()
+	local footer = pum_info.size and tostring(pum_info.size) or ""
+	local title = complete_info.mode
+	return {
+		border = "single",
+		title = title,
+		title_pos = "center",
+		footer = footer,
+		footer_pos = "center",
+	}
+end
+```
 
 If you want to use a multiple characters keymap for "edit" ("ij" for example), all characters ("i") but the last will still
 be inserted in the command line before entering "normal" mode. To avoid that, you might want to set the following keymap rather
