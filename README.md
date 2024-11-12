@@ -66,6 +66,8 @@ Popupmenu height, width and blend options can be defined as usual with set pumwi
 extra options using the win_opts option. The following options will not be taken into account (relative, width, height, row, col,
 style, zindex, focusable).
 
+![2024-11-12T02:49:26,549439499+01:00](https://github.com/user-attachments/assets/e583eca8-8c36-4cd6-bece-636c6ca3b790)
+
 ```lua
 example_win_opts = function()
 	local pum_info = vim.fn.pum_getpos()
