@@ -60,6 +60,7 @@ function M.init_win()
 		vim.wo[M.win].virtualedit = "onemore"
 		vim.wo[M.win].wrap = false
 		vim.api.nvim_win_set_hl_ns(M.win, M.ns)
+		vim.cmd("echon")
 	end
 end
 
